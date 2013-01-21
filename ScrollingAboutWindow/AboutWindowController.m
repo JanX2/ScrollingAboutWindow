@@ -149,7 +149,7 @@ static CGFloat kAboutWindowCreditsFadeDuration = 3.0; // Duration in seconds
         animation.duration = kAboutWindowCreditsFadeDuration;
         animation.fromValue = [NSNumber numberWithFloat:0.0f];
         animation.toValue = [NSNumber numberWithFloat:1.0f];
-        animation.removedOnCompletion = NO;
+        animation.removedOnCompletion = YES;
         animation.fillMode = kCAFillModeBoth;
         animation.additive = NO;
         [creditsLayer addAnimation:animation forKey:@"opacityIN"];
