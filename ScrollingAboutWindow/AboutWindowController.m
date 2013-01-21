@@ -15,6 +15,9 @@ static CGFloat kAboutWindowCreditsFadeHeight = 6.0;
 static CGColorRef kAboutWindowCreditsFadeColor1 = NULL;
 static CGColorRef kAboutWindowCreditsFadeColor2 = NULL;
 
+static CGFloat kAboutWindowCreditsInitialViewStartPositionPercentage = 0.1; // Start offset of the Credits text in percent relative to the height of the view
+static CGFloat kAboutWindowCreditsFadeDuration = 3.0; // Duration in seconds
+
 #pragma mark -
 
 @interface AboutWindowController ()
@@ -29,7 +32,7 @@ static CGColorRef kAboutWindowCreditsFadeColor2 = NULL;
 #pragma mark -
 
 @interface AboutWindowController (ScrollingCredits)
-- (void)startCreditsScrollAnimationStartingWithEmptyView:(BOOL)initial;
+- (void)startCreditsScrollAnimationFadingIn:(BOOL)initial;
 - (void)stopCreditsScrollAnimation;
 - (void)resetCreditsScrollPositionWithOffset:(CGFloat)offset;
 - (CGSize)sizeForAttributedString:(NSAttributedString *)string inWidth:(CGFloat)width;
@@ -88,7 +91,7 @@ static CGColorRef kAboutWindowCreditsFadeColor2 = NULL;
 
 - (void)showWindow:(id)sender {
 	[super showWindow:sender];
-	[self startCreditsScrollAnimationStartingWithEmptyView:NO];
+	[self startCreditsScrollAnimationFadingIn:YES];
 }
 
 - (void)windowWillClose:(NSNotification *)note {
@@ -128,22 +131,33 @@ static CGColorRef kAboutWindowCreditsFadeColor2 = NULL;
 
 #pragma mark - Higher level 
 
-- (void)startCreditsScrollAnimationStartingWithEmptyView:(BOOL)wantEmptyView {
+- (void)startCreditsScrollAnimationFadingIn:(BOOL)fadeIn {
 	CATextLayer *creditsLayer = self.creditsTextLayer;
 	CGFloat viewHeight = self.creditsView.bounds.size.height;
 	CGFloat fadeCompensation = self.creditsFadeHeightCompensation;
 	
 	// Enable animation and reset.
 	self.isCreditsAnimationActive = YES;
-	[self resetCreditsScrollPositionWithOffset:(wantEmptyView ? 0.0 : viewHeight)];
+	[self resetCreditsScrollPositionWithOffset:(fadeIn ? viewHeight * kAboutWindowCreditsInitialViewStartPositionPercentage : 0.0)];
 	
 	// Animate to top and execute animation again - resulting in endless loop.
 	[CATransaction begin];
+	if (fadeIn == NO) {
+        CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"opacity"];
+        animation.beginTime = 0.0;
+        animation.duration = kAboutWindowCreditsFadeDuration;
+        animation.fromValue = [NSNumber numberWithFloat:0.0f];
+        animation.toValue = [NSNumber numberWithFloat:1.0f];
+        animation.removedOnCompletion = NO;
+        animation.fillMode = kCAFillModeBoth;
+        animation.additive = NO;
+        [creditsLayer addAnimation:animation forKey:@"opacityIN"];
+	}
 	[CATransaction setAnimationDuration:(viewHeight / kAboutWindowCreditsAnimationSpeed)];
 	[CATransaction setAnimationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear]];
 	[CATransaction setCompletionBlock:^{ 
 		if (!self.isCreditsAnimationActive) return;
-		[self startCreditsScrollAnimationStartingWithEmptyView:YES];
+		[self startCreditsScrollAnimationFadingIn:NO];
 	}];
 	creditsLayer.position = CGPointMake(0.0, viewHeight + fadeCompensation);
 	[CATransaction commit];
