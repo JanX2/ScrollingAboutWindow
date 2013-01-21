@@ -138,7 +138,8 @@ static CGFloat kAboutWindowCreditsFadeDuration = 3.0; // Duration in seconds
 	
 	// Enable animation and reset.
 	self.isCreditsAnimationActive = YES;
-	[self resetCreditsScrollPositionWithOffset:(fadeIn ? viewHeight * kAboutWindowCreditsInitialViewStartPositionPercentage : 0.0)];
+	CGFloat offset = (fadeIn ? viewHeight * kAboutWindowCreditsInitialViewStartPositionPercentage : 0.0);
+	[self resetCreditsScrollPositionWithOffset:offset];
 	
 	// Animate to top and execute animation again - resulting in endless loop.
 	[CATransaction begin];
@@ -153,7 +154,7 @@ static CGFloat kAboutWindowCreditsFadeDuration = 3.0; // Duration in seconds
         animation.additive = NO;
         [creditsLayer addAnimation:animation forKey:@"opacityIN"];
 	}
-	[CATransaction setAnimationDuration:(viewHeight / kAboutWindowCreditsAnimationSpeed)];
+	[CATransaction setAnimationDuration:((viewHeight - offset) / kAboutWindowCreditsAnimationSpeed)];
 	[CATransaction setAnimationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear]];
 	[CATransaction setCompletionBlock:^{ 
 		if (!self.isCreditsAnimationActive) return;
