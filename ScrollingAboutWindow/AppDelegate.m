@@ -20,6 +20,11 @@
 @synthesize aboutWindowController = _aboutWindowController;
 @synthesize window = _window;
 
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+{
+	[self.aboutWindowController showWindow:self];
+}
+
 #pragma mark - User actions
 
 - (IBAction)showAboutWindow:(id)sender {
