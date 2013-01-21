@@ -29,9 +29,9 @@ static CGColorRef kAboutWindowCreditsFadeColor2 = NULL;
 #pragma mark -
 
 @interface AboutWindowController (ScrollingCredits)
-- (void)startCreditsScrollAnimation;
+- (void)startCreditsScrollAnimationStartingWithEmptyView:(BOOL)initial;
 - (void)stopCreditsScrollAnimation;
-- (void)resetCreditsScrollPosition;
+- (void)resetCreditsScrollPositionWithOffset:(CGFloat)offset;
 - (CGSize)sizeForAttributedString:(NSAttributedString *)string inWidth:(CGFloat)width;
 @property (nonatomic, readonly) CGFloat creditsFadeHeightCompensation;
 @property (nonatomic, readonly) CALayer *creditsRootLayer;
@@ -88,7 +88,7 @@ static CGColorRef kAboutWindowCreditsFadeColor2 = NULL;
 
 - (void)showWindow:(id)sender {
 	[super showWindow:sender];
-	[self startCreditsScrollAnimation];
+	[self startCreditsScrollAnimationStartingWithEmptyView:NO];
 }
 
 - (void)windowWillClose:(NSNotification *)note {
@@ -128,14 +128,14 @@ static CGColorRef kAboutWindowCreditsFadeColor2 = NULL;
 
 #pragma mark - Higher level 
 
-- (void)startCreditsScrollAnimation {
+- (void)startCreditsScrollAnimationStartingWithEmptyView:(BOOL)wantEmptyView {
 	CATextLayer *creditsLayer = self.creditsTextLayer;
 	CGFloat viewHeight = self.creditsView.bounds.size.height;
 	CGFloat fadeCompensation = self.creditsFadeHeightCompensation;
 	
 	// Enable animation and reset.
 	self.isCreditsAnimationActive = YES;
-	[self resetCreditsScrollPosition];
+	[self resetCreditsScrollPositionWithOffset:(wantEmptyView ? 0.0 : viewHeight)];
 	
 	// Animate to top and execute animation again - resulting in endless loop.
 	[CATransaction begin];
@@ -143,7 +143,7 @@ static CGColorRef kAboutWindowCreditsFadeColor2 = NULL;
 	[CATransaction setAnimationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear]];
 	[CATransaction setCompletionBlock:^{ 
 		if (!self.isCreditsAnimationActive) return;
-		[self startCreditsScrollAnimation];
+		[self startCreditsScrollAnimationStartingWithEmptyView:YES];
 	}];
 	creditsLayer.position = CGPointMake(0.0, viewHeight + fadeCompensation);
 	[CATransaction commit];
@@ -151,17 +151,17 @@ static CGColorRef kAboutWindowCreditsFadeColor2 = NULL;
 
 - (void)stopCreditsScrollAnimation {
 	self.isCreditsAnimationActive = NO;
-	[self resetCreditsScrollPosition];
+	[self resetCreditsScrollPositionWithOffset:0.0];
 }
 
-- (void)resetCreditsScrollPosition {
+- (void)resetCreditsScrollPositionWithOffset:(CGFloat)offset {
 	CATextLayer *creditsLayer = self.creditsTextLayer;
 	CGFloat textHeight = creditsLayer.frame.size.height;
 	CGFloat fadeCompensation = self.creditsFadeHeightCompensation;
 	
 	[CATransaction begin];
 	[CATransaction setAnimationDuration:0.0];
-	creditsLayer.position = CGPointMake(0.0, -textHeight - fadeCompensation);
+	creditsLayer.position = CGPointMake(0.0, offset - textHeight - fadeCompensation);
 	[CATransaction commit];
 }
 
