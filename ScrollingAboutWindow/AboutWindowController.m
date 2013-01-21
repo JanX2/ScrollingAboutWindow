@@ -259,9 +259,11 @@ static CGColorRef kAboutWindowCreditsFadeColor2 = NULL;
 }
 
 - (CGSize)sizeForAttributedString:(NSAttributedString *)string inWidth:(CGFloat)width {
+	CGFloat height = 0;
+#if 0
     CTTypesetterRef typesetter = CTTypesetterCreateWithAttributedString((__bridge CFAttributedStringRef)string);
     CFIndex offset = 0, length;
-    CGFloat height = 0;
+    
     do {
         length = CTTypesetterSuggestLineBreak(typesetter, offset, width);
         CTLineRef line = CTTypesetterCreateLine(typesetter, CFRangeMake(offset, length));        
@@ -272,6 +274,11 @@ static CGColorRef kAboutWindowCreditsFadeColor2 = NULL;
         height += ascent + descent + leading;
     } while (offset < [string length]);
     CFRelease(typesetter);
+#else
+	height = NSHeight([string boundingRectWithSize:NSMakeSize(width, CGFLOAT_MAX)
+										   options:NSStringDrawingUsesLineFragmentOrigin]);
+#endif
+
     return CGSizeMake(width, ceil(height));
 }
 
